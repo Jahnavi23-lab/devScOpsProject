@@ -24,16 +24,29 @@ jobs:
         run: npm install -g yarn
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --force
 
       - name: Lint
-        run: yarn lint
+        run: |
+          echo "::group::Running lint"
+          yarn lint || { echo "::error::Linting failed!"; exit 1; }
+          echo "::endgroup::"
 
       - name: Type Check (Flow)
-        run: yarn flow
+        run: |
+          echo "::group::Running Flow type check"
+          # Use dom-node renderer for CI
+          yarn flow dom-node || { echo "::error::Flow type errors detected!"; exit 1; }
+          echo "::endgroup::"
 
       - name: Tests
-        run: yarn test --ci
+        run: |
+          echo "::group::Running tests"
+          yarn test --ci || { echo "::error::Tests failed!"; exit 1; }
+          echo "::endgroup::"
 
       - name: Build
-        run: yarn build
+        run: |
+          echo "::group::Building project"
+          yarn build || { echo "::error::Build failed!"; exit 1; }
+          echo "::endgroup::"
