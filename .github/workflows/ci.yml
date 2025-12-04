@@ -1,4 +1,4 @@
-name: React CI Pipeline
+name: CI
 
 on:
   push:
@@ -7,38 +7,29 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install Yarn
-        run: npm install --global yarn
+          node-version: 20
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm install
 
-      - name: Lint code
-        run: yarn lint
+      - name: Lint
+        run: npm run lint
 
-      - name: Run tests
-        run: yarn test --ci
+      - name: Type Check (Flow)
+        run: npm run flow
 
-      - name: Build packages
-        run: yarn build
-      
-      - name: build docker images
-        if: github.event_name == 'push'
-        run: |
-          docker build -t myapp:latest .
+      - name: Tests
+        run: npm test -- --ci
+
+      - name: Build
+        run: npm run build
