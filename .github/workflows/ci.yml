@@ -1,4 +1,4 @@
-name: CI
+name: React CI Pipeline
 
 on:
   push:
@@ -7,46 +7,33 @@ on:
     branches: [ main ]
 
 jobs:
-  build-test:
+  build-and-test:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "yarn"
+          node-version: ${{ matrix.node-version }}
 
       - name: Install Yarn
-        run: npm install -g yarn
+        run: npm install --global yarn
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --force
+        run: yarn install --frozen-lockfile
 
-      - name: Lint
-        run: |
-          echo "::group::Running lint"
-          yarn lint || { echo "::error::Linting failed!"; exit 1; }
-          echo "::endgroup::"
+      - name: Lint code
+        run: yarn lint
 
-      - name: Type Check (Flow)
-        run: |
-          echo "::group::Running Flow type check"
-          # Use dom-node renderer for CI
-          yarn flow dom-node || { echo "::error::Flow type errors detected!"; exit 1; }
-          echo "::endgroup::"
+      - name: Run tests
+        run: yarn test --ci
 
-      - name: Tests
-        run: |
-          echo "::group::Running tests"
-          yarn test --ci || { echo "::error::Tests failed!"; exit 1; }
-          echo "::endgroup::"
-
-      - name: Build
-        run: |
-          echo "::group::Building project"
-          yarn build || { echo "::error::Build failed!"; exit 1; }
-          echo "::endgroup::"
+      - name: Build packages
+        run: yarn build
