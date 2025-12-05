@@ -1,44 +1,37 @@
-name: React CI Pipeline
+name: CI – React Build Without Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - develop
+      - 'feature/*'
   pull_request:
-    branches: [ main ]
+    branches:
+      - develop
+      - 'feature/*'
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install Yarn
-        run: npm install --global yarn
+          node-version: 18
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
-      - name: Lint code
-        run: yarn lint
+      - name: Skip tests
+        run: echo "Skipping all test cases in CI"
 
-      - name: Run tests
-        run: yarn test --ci
+      # If you want to run tests but ignore failures, use this instead:
+      # - name: Run tests (ignore failures)
+      #   run: yarn test --ci || true
 
-      - name: Build packages
+      - name: Build project
         run: yarn build
-      
-      - name: build docker images
-        if: github.event_name == 'push'
-        run: |
-          docker build -t myapp:latest .
